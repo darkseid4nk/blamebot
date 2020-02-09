@@ -28,6 +28,7 @@ weather <zip>  | Utilizes wttr.in to display weather.
 To see more information on a command type !blame help <command>
 
 To-do:
+ + Add mutex lock to ark update function
  + Raid team list
  + Ark RCON
  + Minecraft RCON
