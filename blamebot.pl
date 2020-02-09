@@ -186,23 +186,32 @@ Buy your admin a beer, pizza, and server hardware to bring you a better gaming e
 	        }
 	        elsif ( $message[2] eq "checkupdate" )
 	        {
-	        	my $update;
-		        my $mod;
-	
-			$output = "```";
-			$output .= `arkmanager checkupdate`;
-			$update = $? >> 8;
-			$output .= `arkmanager checkmodupdate --revstatus`;
-			$output .= "```";
-			$output =~ s/\x1B(\[[0-9;]*[JKmsu]|\(B)//g;
-			$output =~ s/\x1B[7-8]//g;
-	
-			$mod = $? >> 8;
-			if ( $update == 1 || $mod == 1 )
-			{
-				$bot->say($channel->{id}, "```Update detected, automagically running update in background.```");
-				exec "echo \$(date -u) >> arkmanager.log; arkmanager update --warn --update-mods >> arkmanager.log;" if !fork();
-			}
+                        my $pid = fork;
+                        die "failed to fork: $!" unless defined $pid;
+                        if ($pid == 0)
+                        {
+				my $update;
+                        	my $mod;
+				posttodiscord($channel->{id}, "Checking for update. May take a while.");
+
+				#$output = "```";
+	                        $output = `arkmanager checkupdate`;
+	                        $update = $? >> 8;
+	                        $output .= `arkmanager checkmodupdate --revstatus`;
+	                        #$output .= "```";
+	                        $output =~ s/\x1B(\[[0-9;]*[JKmsu]|\(B)//g;
+	                        $output =~ s/\x1B[7-8]//g;
+				posttodiscord($channel->{id}, $output);
+			
+				$mod = $? >> 8;
+	                        if ( $update == 1 || $mod == 1 )
+	                        {
+	                                posttodiscord($channel->{id}, "Update detected, automagically running update in background.");
+					my $stdout = `echo \$(date -u) >> arkmanager.log; arkmanager update --warn --update-mods`;
+					posttodiscord($channel->{id}, $stdout) unless !length($stdout);
+	                        }
+                                exit;
+                        }
 		}
 		elsif ( $message[2] eq "updatehistory" )
 		{
